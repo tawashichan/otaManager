@@ -5,9 +5,9 @@ import (
 	"strconv"
 )
 
-type ReservedCount uint
+type ReservedCount int
 
-type BlockedCount uint
+type BlockedCount int
 
 // 楽観ロックのために使用
 type RoomAvailabilityVersion uint

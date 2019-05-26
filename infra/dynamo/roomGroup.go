@@ -72,16 +72,22 @@ func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, u
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(roomGroup.AvailabilityVersion)
-	fmt.Println(update[0].Change)
-
-	availability := append(roomGroup.Availability, &roomGroupModel.DateAvailability{
+	/*availability := append(roomGroup.Availability, &roomGroupModel.DateAvailability{
 		Date:          update[0].Date,
 		ReservedCount: roomGroupModel.ReservedCount(update[0].Change),
-	})
+	})*/
+	count := roomGroupModel.ReservedCount(int(roomGroup.Availability[0].ReservedCount) + int(update[0].Change))
 
-	availabilityInput, err := dynamodbattribute.Marshal(availability)
+	fmt.Println(count)
+
+	roomGroup.Availability[0].ReservedCount = roomGroupModel.ReservedCount(func() int {
+		if count < 0 {
+			return 0
+		} else {
+			return int(count)
+		}
+	}())
+	availabilityInput, err := dynamodbattribute.Marshal(roomGroup.Availability)
 	if err != nil {
 		return err
 	}

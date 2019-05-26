@@ -12,22 +12,35 @@ import (
 func main() {
 	id := common.RoomGroupId("hoge")
 	client := dynamo.NewRoomGroupRespository("otaManagerRoomGroup")
-	roomGroup := &roomGroupModel.RoomGroup{Id: id}
+	startDate := common.NewDate(2019, 1, 1)
+	roomGroup := &roomGroupModel.RoomGroup{
+		Id: id,
+		Availability: roomGroupModel.DateAvailabilities{
+			&roomGroupModel.DateAvailability{
+				Date:          startDate,
+				ReservedCount: 0,
+			},
+		},
+	}
 	if e := client.Save(roomGroup); e != nil {
 		panic(e)
 	}
 
-	startDate := common.NewDate(2019, 1, 1)
-
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 50; i++ {
 		num := i
 		go func() {
 			shouldExec := true
 			for shouldExec {
 				if err := client.UpdateAvailability(id, event.UpdateRoomGroupAvailabilities{
 					&event.UpdateRoomGroupAvailability{
-						Date:   startDate,
-						Change: event.ChangeInAvailableRoomNum(num),
+						Date: startDate,
+						Change: event.ChangeInAvailableRoomNum(func() int {
+							if num%2 == 0 {
+								return 1
+							} else {
+								return -1
+							}
+						}()),
 					},
 				}); err != nil {
 					if dynamo.IsDynamoDBConditionalUpdateFailed(err) {
