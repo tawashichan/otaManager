@@ -40,34 +40,48 @@ func (repo roomGroupRepository) Save(roomGroup *roomGroupModel.RoomGroup) error 
 		TableName: aws.String(repo.tableName),
 	}
 
-	output, err := repo.client.PutItem(input)
-	if err != nil {
-		return err
+	_, e := repo.client.PutItem(input)
+	if e != nil {
+		return e
 	}
-	fmt.Println(output)
 	return nil
 }
 
-func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, update event.UpdateRoomGroupAvailabilities) error {
+func (repo roomGroupRepository) Get(id common.RoomGroupId) (*roomGroupModel.RoomGroup, error) {
 	roomGroup := &roomGroupModel.RoomGroup{}
 	result, err := repo.client.GetItem(&dynamodb.GetItemInput{
 		TableName: &repo.tableName,
 		Key: map[string]*dynamodb.AttributeValue{
 			"Id": {
-				S: aws.String(string(groupId)),
+				S: aws.String(string(id)),
 			},
 		},
+		ConsistentRead: aws.Bool(true),
 	})
+	if err != nil {
+		return nil, err
+	}
+	if err := dynamodbattribute.UnmarshalMap(result.Item, roomGroup); err != nil {
+		return nil, err
+	}
+	return roomGroup, nil
+}
+
+func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, update event.UpdateRoomGroupAvailabilities) error {
+	roomGroup, err := repo.Get(groupId)
 	if err != nil {
 		return err
 	}
-	if err := dynamodbattribute.UnmarshalMap(result.Item, roomGroup); err != nil {
-		return err
-	}
 
-	fmt.Println(roomGroup)
+	fmt.Println(roomGroup.AvailabilityVersion)
+	fmt.Println(update[0].Change)
 
-	availabilityInput, err := dynamodbattribute.Marshal(roomGroup.Availability)
+	availability := append(roomGroup.Availability, &roomGroupModel.DateAvailability{
+		Date:          update[0].Date,
+		ReservedCount: roomGroupModel.ReservedCount(update[0].Change),
+	})
+
+	availabilityInput, err := dynamodbattribute.Marshal(availability)
 	if err != nil {
 		return err
 	}
@@ -86,15 +100,20 @@ func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, u
 				N: aws.String(roomGroup.AvailabilityVersion.String()),
 			},
 			":nextVersion": {
-				N: aws.String((roomGroup.AvailabilityVersion + 1).String()),
+				N: aws.String(roomGroup.AvailabilityVersion.NextVersion().String()),
 			},
 			":availability": availabilityInput,
 		},
 	}
-	updateResult, err := repo.client.UpdateItem(updateInput)
-	fmt.Println(updateResult)
-	if err != nil {
-		return err
+	_, e := repo.client.UpdateItem(updateInput)
+	if e != nil {
+		if IsDynamoDBConditionalUpdateFailed(e) {
+			return conditionalUpdateFailed{
+				Err: e,
+			}
+		} else {
+			return e
+		}
 	}
 	return nil
 }

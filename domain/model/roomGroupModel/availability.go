@@ -23,3 +23,7 @@ type DateAvailabilities []*DateAvailability
 func (r RoomAvailabilityVersion) String() string {
 	return strconv.FormatUint(uint64(r), 10)
 }
+
+func (r RoomAvailabilityVersion) NextVersion() RoomAvailabilityVersion {
+	return r + 1
+}

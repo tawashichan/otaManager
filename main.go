@@ -16,12 +16,30 @@ func main() {
 	if e := client.Save(roomGroup); e != nil {
 		panic(e)
 	}
-	for i := 0; i < 100; i++ {
+
+	startDate := common.NewDate(2019, 1, 1)
+
+	for i := 0; i < 20; i++ {
+		num := i
 		go func() {
-			if err := client.UpdateAvailability(id, event.UpdateRoomGroupAvailabilities{}); err != nil {
-				fmt.Println(err.Error())
+			shouldExec := true
+			for shouldExec {
+				if err := client.UpdateAvailability(id, event.UpdateRoomGroupAvailabilities{
+					&event.UpdateRoomGroupAvailability{
+						Date:   startDate,
+						Change: event.ChangeInAvailableRoomNum(num),
+					},
+				}); err != nil {
+					if dynamo.IsDynamoDBConditionalUpdateFailed(err) {
+						fmt.Println(err.Error())
+					} else {
+						shouldExec = false
+					}
+				} else {
+					shouldExec = false
+				}
 			}
 		}()
 	}
-	time.Sleep(10 * time.Second)
+	time.Sleep(100 * time.Second)
 }
