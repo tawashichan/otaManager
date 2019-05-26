@@ -1,6 +1,9 @@
 package roomGroupModel
 
-import "reservationManager/domain/model/common"
+import (
+	"reservationManager/domain/model/common"
+	"strconv"
+)
 
 type ReservedCount uint
 
@@ -17,7 +20,6 @@ type DateAvailability struct {
 
 type DateAvailabilities []*DateAvailability
 
-type RoomGroupAvailability struct {
-	Availability DateAvailabilities
-	Version      RoomAvailabilityVersion
+func (r RoomAvailabilityVersion) String() string {
+	return strconv.FormatUint(uint64(r), 10)
 }

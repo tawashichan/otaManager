@@ -9,8 +9,11 @@ import (
 // 複数のRoomをもち、Roomの空き情報を管理する
 
 type RoomGroup struct {
-	Rooms        roomModel.Rooms
-	Reservations *reservationModel.Reservations
+	Id                  common.RoomGroupId
+	Availability        DateAvailabilities
+	AvailabilityVersion RoomAvailabilityVersion
+	Rooms               roomModel.Rooms
+	Reservations        *reservationModel.Reservations
 }
 
 func (g RoomGroup) CanStay(span common.DateSpan) error {
