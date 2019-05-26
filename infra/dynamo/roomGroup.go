@@ -76,6 +76,7 @@ func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, u
 		Date:          update[0].Date,
 		ReservedCount: roomGroupModel.ReservedCount(update[0].Change),
 	})*/
+
 	count := roomGroupModel.ReservedCount(int(roomGroup.Availability[0].ReservedCount) + int(update[0].Change))
 
 	fmt.Println(count)
