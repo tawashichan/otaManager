@@ -23,3 +23,23 @@ func (rs Reservations) CanStay(staySpan common.DateSpan) bool {
 	}
 	return true
 }
+
+func (rs Reservations) Len() int {
+	return len(rs)
+}
+
+func (rs Reservations) Swap(i, j int) {
+	rs[i], rs[j] = rs[j], rs[i]
+}
+
+func (rs Reservations) Less(i, j int) bool {
+	return rs[i].StaySpan.StartDate.IsEarlierEq(rs[j].StaySpan.StartDate)
+}
+
+func (rs Reservations) First() *Reservation {
+	return rs[0]
+}
+
+func (rs Reservations) Last() *Reservation {
+	return rs[rs.Len()-1]
+}

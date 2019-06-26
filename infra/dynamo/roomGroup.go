@@ -16,7 +16,7 @@ type roomGroupRepository struct {
 	tableName string
 }
 
-func NewRoomGroupRespository(tableName string) roomGroupModel.IRoomGroupRepository {
+func NewRoomGroupRepository(tableName string) roomGroupModel.IRoomGroupRepository {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -77,11 +77,11 @@ func (repo roomGroupRepository) UpdateAvailability(groupId common.RoomGroupId, u
 		ReservedCount: roomGroupModel.ReservedCount(update[0].Change),
 	})*/
 
-	count := roomGroupModel.ReservedCount(int(roomGroup.Availability[0].ReservedCount) + int(update[0].Change))
+	count := roomGroupModel.ReservedCount(int(roomGroup.Availability[update[0].Date.String()].ReservedCount) + int(update[0].Change))
 
 	fmt.Println(count)
 
-	roomGroup.Availability[0].ReservedCount = roomGroupModel.ReservedCount(func() int {
+	roomGroup.Availability[update[0].Date.String()].ReservedCount = roomGroupModel.ReservedCount(func() int {
 		if count < 0 {
 			return 0
 		} else {

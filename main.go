@@ -11,13 +11,12 @@ import (
 
 func main() {
 	id := common.RoomGroupId("hoge")
-	client := dynamo.NewRoomGroupRespository("otaManagerRoomGroup")
+	client := dynamo.NewRoomGroupRepository("otaManagerRoomGroup")
 	startDate := common.NewDate(2019, 1, 1)
 	roomGroup := &roomGroupModel.RoomGroup{
 		Id: id,
-		Availability: roomGroupModel.DateAvailabilities{
-			&roomGroupModel.DateAvailability{
-				Date:          startDate,
+		Availability: roomGroupModel.RoomAvailability{
+			"2019-01-01": &roomGroupModel.DateAvailability{
 				ReservedCount: 0,
 			},
 		},
